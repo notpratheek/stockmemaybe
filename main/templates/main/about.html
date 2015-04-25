@@ -1,0 +1,77 @@
+<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+{% load bootstrap3 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+{% load staticfiles %}
+<style>
+@import url(http://fonts.googleapis.com/css?family=Lato:300);
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body{
+	background: #F0F0F0;
+	color: #000000;
+}
+
+.footer {
+    background: #ECECEC;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display:table;
+	/* Set the fixed height of the footer here */
+	height: 40px;
+  	background-color: #E0E0E0;
+  	color: #5555EE;
+}
+
+.footer > p,
+.footer > div {
+    display:table-cell;
+    vertical-align:middle;
+    padding:10px;
+}
+
+.space{
+	margin-top: 10%;
+	margin-left: 10%;
+	margin-right: 10%;
+	margin-bottom: 10%;
+}
+
+</style>
+<nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="{% url 'main:index' %}">Stock Me Maybe</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="{% url 'main:about' %}"class="active">About</a></li>
+            <li><a href="{% url 'main:tools' %}">Tools Used</a></li>
+            <li><a href="{% url 'main:algo' %}">Algorithm</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+</nav>
+<div class = "container-fluid space">
+	<h2 class="text-center">About</h2>
+	<p class="text-center">
+  		<p>Stock Me Maybe is a web application that lets you peek into the future of stock prices! This application is for the project titled "Scraping and Predictive Analytics of Stock Data." It uses sentiment and predictive analytics.</p>
+  		<p>The project was created by Ghanashyam(1AM11CS031) and Mithun(1AM11CS045).</p> 
+  		<p>Stock Me Maybe is written in Python using the web application framework named Django. MySQL is used for database management. You can find more information about Python and Django in the "Tools Used" section.</p>
+	</p>
+</div>
+<div class = "footer text-center">
+			<p class = "footer-text">Created by Mithun and Ghanashyam.</p>
+</div>

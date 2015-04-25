@@ -1,0 +1,110 @@
+<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+{% load bootstrap3 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+{% load staticfiles %}
+<style>
+@import url(http://fonts.googleapis.com/css?family=Lato:300);
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body{
+	background: #F0F0F0;
+	color: #000000;
+}
+
+.footer {
+    background: #ECECEC;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display:table;
+	/* Set the fixed height of the footer here */
+	height: 40px;
+  	background-color: #E0E0E0;
+  	color: #5555EE;
+}
+
+.footer > p,
+.footer > div {
+    display:table-cell;
+    vertical-align:middle;
+    padding:10px;
+}
+
+.space{
+	margin-top: 10%;
+	margin-left: 10%;
+	margin-right: 10%;
+	margin-bottom: 10%;
+}
+
+</style>
+<nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="{% url 'main:index' %}">Stock Me Maybe</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="{% url 'main:about' %}">About</a></li>
+            <li><a href="{% url 'main:tools' %}">Tools Used</a></li>
+            <li><a href="{% url 'main:algo' %}" class="active">Algorithm</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+</nav>
+<div class="container-fluid space">
+	<h2 class="text-center">Sentiment Variance-based Prediction Algorithm</h2>
+	<h3>Inputs:</h3>
+	<p>
+		<ul>
+			<li>Sentiments list(S)</li>
+			<li>Current stock price (SP1)</li>
+		</ul>
+	</p>
+	<h3>Output:</h3>
+	<p>
+		<ul>	
+			<li>Predicted stock price (SP2)</li>
+		</ul>
+	</p>
+	<h3>Algorithm:</h3>
+	<p>
+		<ol>
+			<li><p>Calculate average of all sentiments of each source separately.</p>
+				<p><img src="{% static "main/e1.jpg" %}" class="img-responsive center-block"/></p>
+			</li>
+			<li><p>Through extensive research, it has been found that the sentiment coefficients(θ) are 0.1(θYFM), 0.85(θTWTR), 0.05(θYFN).</p>
+			</li>
+			<li><p>Calculate effective sentiment using average sentiment for each source and the sentiment coefficients.</p>
+				<p><img src="{% static "main/e2.jpg" %}" class="img-responsive center-block"/></p>
+			</li>
+			<li><p>Repeat the above steps for the sentiments of the previous day to get ES2.</p>
+				<p><img src="{% static "main/e3.jpg" %}" class="img-responsive center-block"/></p>
+			</li>
+			<li><p>Calculate the Δ(Sentiments) for each source.</p>
+				<p><img src="{% static "main/e4.jpg" %}" class="img-responsive center-block"/></p>
+			</li>
+			<li><p>Calculate the predicted stock price using the equation:</p>
+				<p><img src="{% static "main/e5.jpg" %}" class="img-responsive center-block"/></p>
+			</li>
+		</ol>
+	</p>
+	<p>
+(Note : The values of sentiment coefficients can be changed dynamically based on the source's performance in the future )
+	</p>
+</div>
+<div class = "footer text-center">
+			<p class = "footer-text">Created by Mithun and Ghanashyam.</p>
+</div>

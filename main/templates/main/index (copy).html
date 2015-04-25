@@ -1,0 +1,99 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.js"></script>
+{% load bootstrap3 %}
+{% bootstrap_css %}
+{% load staticfiles %}
+<style>
+.chart-legend ul li span{
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    margin-right: 5px;
+    list-style-type: none;
+}
+body{
+	background: #000000;
+	color: #FFFFFF;
+}
+</style>
+<div class = "container">
+  <h1 class = "text-center">Stock Me Maybe</h1>
+</div>
+<div class = "container">
+<form class = "form-inline text-center" action = "{% url 'ugc:ugc' %}" method="post">
+{% csrf_token %}
+	<div class = "form-group">
+		<label for = "cname">Name</label>
+		<input type="text" name = "ticker" class="form-control" id="cname" placeholder = "eg: AAPL">
+	</div>
+	<button type = "submit" class="btn btn-primary"> Analyse </button>
+</form>
+<div style="max-width: 1700px;">
+	<canvas id="myChart"></canvas>
+	<div id="legend" class = "chart-legend" style = "display: inline"></div>
+</div>
+</div>
+<script>
+
+var lab = [];
+var dat0 = [];
+
+var dat1 = [];
+
+var dat2 = [];
+
+{% for item in object_list.0.0 %}
+	lab.push("{{ item|safe }}");
+{% endfor %}
+{% for item in object_list.0.1 %}
+	dat0.push("{{ item|safe }}");
+{% endfor %}
+
+{% for item in object_list.1.1 %}
+	dat1.push("{{ item|safe }}");
+{% endfor %}
+
+{% for item in object_list.2.1 %}
+	dat2.push("{{ item|safe }}");
+{% endfor %}
+
+var data = {
+    labels: lab,
+    datasets: [
+        {
+            label: "AAPL",
+            fillColor: "rgba(220,220,220,0.2)",
+            strokeColor: "rgba(220,220,220,1)",
+            pointColor: "rgba(220,220,220,1)",
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: "rgba(220,220,220,1)",
+            data: dat0
+        },
+        {
+            label: "GOOG",
+            fillColor: "rgba(100,220,150,0.2)",
+            strokeColor: "rgba(100,220,150,1)",
+            pointColor: "rgba(100,220,150,1)",
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: "rgba(100,220,150,1)",
+            data: dat1
+        },
+        {
+            label: "MSFT",
+            fillColor: "rgba(100,130,220,0.2)",
+            strokeColor: "rgba(100,130,220,1)",
+            pointColor: "rgba(100,130,220,1)",
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: "rgba(100,130,220,1)",
+            data: dat2
+        }
+    ]
+};
+var ctx = document.getElementById("myChart").getContext("2d");
+var myLineChart = new Chart(ctx).Line(data, {responsive:true});
+document.getElementById("legend").innerHTML = myLineChart.generateLegend();
+</script>
+
+
