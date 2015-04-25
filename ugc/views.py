@@ -1,0 +1,283 @@
+from django.shortcuts import render_to_response, get_object_or_404,render
+from django.http import HttpResponseRedirect, HttpResponse
+from django.core.urlresolvers import reverse
+from django.views.generic import View,ListView
+import urllib.request
+from django.utils import timezone
+from django.template import RequestContext
+import twitter, json
+from datetime import datetime, timedelta
+from ugc.models import Messages, Company, Source
+import email.utils
+import unicodedata
+from textblob import TextBlob
+from textblob.sentiments import NaiveBayesAnalyzer
+import threading
+from queue import Queue
+import ystockquote
+
+#One Class To Rule Them All
+#==========================
+
+class UGCView(ListView):
+	#URL that the view redirects to
+	template_name = 'ugc/ugc.html'
+	
+	#Method to retrieve ticker, get UGC and redirect to above URL
+	def post(self, request, *args, **kwargs):
+		#Get ticker
+		tkr = request.POST.get('ticker')
+		#Create entry in company table
+		company, created = Company.objects.get_or_create(ticker = tkr)
+		#Get current price of ticker
+		price = yf_price(company)
+		#YFM Source entry
+		source, created = Source.objects.get_or_create(source="Yahoo Finance Messages")
+		#Create thread to get UGC from YFM
+		t_yfm = threading.Thread(target=yf_msg, args=(company,source))
+		t_yfm.start()
+		#YFN Source entry
+		source, created = Source.objects.get_or_create(source="Yahoo Finance News")
+		#Create thread to get UGC from YFN
+		t_yfn = threading.Thread(target=yf_news, args=(company,source))
+		t_yfn.start()
+		#Twitter Source entry		
+		source, created = Source.objects.get_or_create(source="Twitter")
+		#Create thread to get UGC from Twitter
+		t_twtr = threading.Thread(target=tweets_get, args=(company,source))
+		t_twtr.start()
+		#Wait till all the threads have completed execution
+		t_yfm.join()
+		t_yfn.join()
+		t_twtr.join()	
+		#Get Predicted stock price
+		predicted_price = stock_price_prediction(price, company)
+		#Data for graph
+		g_data = get_h_prices(tkr, predicted_price)
+		#Get company name
+		company_name = get_company_name(company)
+		#Render page, sending data to be used in template
+		#return render_to_response(self.template_name,{'ticker':tkr, 'price':price,'predicted_price':predicted_price, 'message_list':messages.filter(company_id = company.id), 'sources': Source.objects.all(), 's' : s })
+		return render_to_response(self.template_name,{'ticker':tkr, 'price':price, 'c_name':company_name, 'predicted_price':predicted_price, 'g_data':g_data})
+	#Nothing to pass, yet. Could be used for graphs.
+	def get_queryset(self):
+		return 
+
+#Get Historical Prices
+#=====================
+def get_h_prices(ticker, price):
+	quotes = ystockquote.get_historical_prices(ticker, str((datetime.now() - timedelta(days=7)).date()), str(datetime.now().date()))
+	data = []
+	dates = []
+	prices = []
+	info = dict()
+	for date in quotes:
+		dates.append(date)
+	dates.sort()
+	for i in range(len(dates)):
+		prices.append(quotes[dates[i]]['Close'])
+	dates.append(str((datetime.now() + timedelta(days=1)).date()))
+	prices.append(price)
+	data.append(dates)
+	data.append(prices)
+	return data
+
+#Stock Price Prediction
+#======================
+def stock_price_prediction(price, company):
+	#Get today's messages
+	messages2 = Messages.objects.filter(created_at__range = [timezone.now() - timedelta(days=1), timezone.now()], company_id = company.id)
+	#Calculate today's effective sentiment
+	sentiment_2 = calculate_effective_sentiment(messages2, company)
+	#Get yesterday's messages
+	messages1 = Messages.objects.filter(created_at__range = [timezone.now() - timedelta(days=2), timezone.now() - timedelta(days=1)], company_id = company.id)
+	#Calculate yesterday's effective sentiment
+	sentiment_1 = calculate_effective_sentiment(messages1, company)
+	#Find the difference between the two effective sentiments
+	delta_sentiment = sentiment_2 - sentiment_1
+	#Calculate predicted price
+	predicted_price = price + (price * delta_sentiment)
+	#Return predicted price
+	return float("{0:.2f}".format(predicted_price))
+	
+	
+#Sentiment Calculation
+#=====================
+def calculate_effective_sentiment(messages, company):
+	#Get messages from different sources
+	m = messages.filter(company_id = company.id)
+	m_yfm = messages.filter(source_id = 1).values('text').distinct()
+	m_yfn = messages.filter(source_id = 2).values('text').distinct()
+	m_twtr = messages.filter(source_id = 3).values('text').distinct()
+	s = []
+	s.append(0.0)
+	s.append(0.0)
+	s.append(0.0)
+	s.append(0.0)
+	#Calculate effective sentiment of each source
+	if(m_yfm.count() != 0):
+		for i in m_yfm:
+			s[1] += TextBlob(i['text']).sentiment.polarity
+		s[1] = s[1]/m_yfm.count()
+	else:
+		s[1] = 0.0
+	if(m_yfn.count() != 0):
+		for i in m_yfn:
+			s[2] += TextBlob(i['text']).sentiment.polarity
+		s[2] = s[2]/m_yfn.count()
+	else:
+		s[2] = 0.0
+	if(m_twtr.count() != 0):
+		for i in m_twtr:
+			s[3] += TextBlob(i['text']).sentiment.polarity
+		s[3] = s[3]/m_twtr.count()
+	else:
+		s[3] = 0.0
+	#Calculate total effective sentiment
+	sentiment = (s[1] * 0.1) + (s[2] * 0.05) + (s[3] * 0.85)
+	#Return total effective sentiment
+	return sentiment
+
+#Tweets
+#======
+
+def tweets_get(company, source):
+	
+	#Define twitter OAuth keys
+	CONSUMER_KEY = 'CONSUMER_KEY'
+	CONSUMER_SECRET = 'CONSUMER_SECRET'
+	OAUTH_TOKEN = 'OAUTH_TOKEN'
+	OAUTH_TOKEN_SECRET = 'OAUTH_TOKEN_SECRET'
+	
+	#Authenticate api access
+	auth=twitter.oauth.OAuth(OAUTH_TOKEN,OAUTH_TOKEN_SECRET,CONSUMER_KEY,CONSUMER_SECRET)
+	
+	#Connect to twitter
+	twitter_api = twitter.Twitter(auth = auth)
+	
+	#Tweets search query
+	q = '$' + company.ticker
+	#Number of tweets to retrieve
+	count = 100
+	search_results = twitter_api.search.tweets(q = q, count = count)
+	statuses = search_results['statuses']
+	#store each tweet in tweets_tweets table
+	for t in statuses:
+		#Text = data between anchor beginning and end
+		txt = unicodedata.normalize('NFKD',t['text']).encode('ascii', 'ignore')
+		#Create new Messages entry
+		new_msg = Messages()
+		new_msg.company_id = company.id
+		new_msg.created_at = timezone.now()
+		new_msg.source_id = source.id
+		new_msg.text = txt
+		new_msg.save()
+
+
+#Yahoo! Finance Message Boards
+#=============================
+
+def yf_msg(company, source):
+	#Define URL for messages retrieval
+	htmlfile = urllib.request.urlopen("http://finance.yahoo.com/mb/" + company.ticker)
+	#Store HTML code in htmltext
+	htmltext = str(htmlfile.read())
+	while True:
+		#Search for particular class
+		start_class = htmltext.find('class=" mb-tab-topic mb-ult-tpc"')
+		if start_class != -1:
+			#Find location of anchor text
+			start_quote = htmltext.find('>', start_class)
+			#Find end of anchor
+			end_anchor = htmltext.find('</a>', start_quote + 1)
+			#Text = data between anchor beginning and end
+			txt = htmltext[start_quote + 1 : end_anchor]
+			#Create new Messages entry
+			new_msg = Messages()
+			new_msg.company_id = company.id
+			new_msg.created_at = timezone.now()
+			new_msg.source_id = source.id
+			new_msg.text = txt
+			new_msg.save()
+			htmltext = htmltext[end_anchor:]
+		else:
+			break
+
+
+#Yahoo! Finance News
+#===================
+
+def yf_news(company, source):
+	#Define URL for messages retrieval
+	htmlfile = urllib.request.urlopen("http://finance.yahoo.com/q/h?s=" + company.ticker)
+	#Store HTML code in htmltext
+	htmltext = str(htmlfile.read())
+	#Search for particular class
+	start_class = htmltext.find('class="yfncnhl newsheadlines"')
+	#Search for occurance of list entry
+	start_li = htmltext.find('<li>',start_class)
+	while True:	
+		if start_li != -1:
+			#Find location of anchor definition
+			start_anchor = htmltext.find('<a',start_li)
+			#Find location of anchor text
+			start_quote = htmltext.find('>',start_anchor)
+			#Find end of anchor
+			end_anchor = htmltext.find('</a>',start_quote+1)
+			#Text = data between anchor beginning and end
+			txt = htmltext[start_quote + 1 : end_anchor]
+			#Create new Messages entry
+			new_msg = Messages()
+			new_msg.company_id = company.id
+			new_msg.created_at = timezone.now()
+			new_msg.source_id = source.id
+			new_msg.text = txt
+			new_msg.save()
+			start_li = htmltext.find('<li>',end_anchor)
+		else:
+			break
+
+#Yahoo! Finance Ticker Prices
+#============================
+
+def yf_price(company):
+	#Define URL for price retrieval
+	htmlfile = urllib.request.urlopen("http://finance.yahoo.com/q?s=" + company.ticker)
+	#Store HTML code in htmltext
+	htmltext = str(htmlfile.read())
+	msgs=""
+	#Search for particular class
+	start_class = htmltext.find('class="time_rtq_ticker">')
+	if start_class != -1:
+		#Find location of span definition
+		start_span = htmltext.find('<span',start_class)
+		#Find location of span text
+		close_span = htmltext.find('">',start_span)
+		#Find end of span definition
+		end_span = htmltext.find('</span>',close_span+1)
+		#Price = Text between span text and end of span definition
+		msgs = htmltext[close_span+2:end_span]
+		htmltext = htmltext[end_span:]
+	return float(msgs)
+
+#Company Name
+#============================
+
+def get_company_name(company):
+	#Define URL for price retrieval
+	htmlfile = urllib.request.urlopen("https://www.google.com/finance?q=" + company.ticker)
+	#Store HTML code in htmltext
+	htmltext = str(htmlfile.read())
+	msgs=""
+	#Search for particular class
+	start_class = htmltext.find('class="g-unit g-first">')
+	if start_class != -1:
+		#Find location of span definition
+		start_head = htmltext.find('<h3>',start_class)
+		#Find location of span text
+		close_head = htmltext.find('</h3>',start_head)
+		#Find end of span definition
+		#end_span = htmltext.find('</span>',close_span+1)
+		#Price = Text between span text and end of span definition
+		msgs = htmltext[start_head+4:close_head-12]
+	return msgs

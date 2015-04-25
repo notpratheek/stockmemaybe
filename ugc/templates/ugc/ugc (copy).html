@@ -1,0 +1,24 @@
+{% load bootstrap3 %}
+
+{% bootstrap_css %}
+{% load staticfiles %}
+<div class="container-fluid">
+<h1 class = "text-center">{{ticker}} : {{price}}</h1>
+{% for i in s %}
+	<h2> {{ i }} </h2>
+{% endfor %}
+	
+{% if message_list %}
+{% load app_filters %}
+{% for source in sources %}
+	<h2 class = "text-center">{{ source.source }}</h2>
+	{% for msg in message_list|from_source:source.id %}
+		<div class = "jumbotron">
+			<p> {{ msg.text }}</p>
+		</div>
+	{% endfor %}
+{% endfor %}
+{% else %}
+	<p>No messages are available.</p>
+{% endif %}
+</div>

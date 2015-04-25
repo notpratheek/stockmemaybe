@@ -1,0 +1,9 @@
+from django import template
+
+register = template.Library()
+
+@register.filter
+def from_source(messages, source):
+	return messages.filter(source_id=source)
+
+
