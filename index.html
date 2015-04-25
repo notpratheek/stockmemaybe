@@ -24,34 +24,37 @@
 
 <p>Scraping and predictive analytics of stock data</p>
 
-<p>Stock Me Maybe is a web application that lets you peek into the future of stock prices!
-It uses sentiment and predictive analytics.
-Stock Me Maybe is written in Python using the web application framework named Django. 
-MySQL is used for database management.</p>
+<p>Stock Me Maybe is a web application that lets you peek into the future of stock prices!</p>
+
+<p>It uses sentiment and predictive analytics.</p>
+
+<p>Stock Me Maybe is written in Python using the web application framework named Django.</p>
+
+<p>MySQL is used for database management.</p>
 
 <h3>
 <a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Requirements:</h3>
 
 <ol>
-  <li>Virtualenv (https://pypi.python.org/pypi/virtualenv)</li>
-  <li>MySQL (https://www.mysql.com/)</li>
+  <li><a href="https://pypi.python.org/pypi/virtualenv">Virtualenv</a></li>
+  <li><a href="https://www.mysql.com/">MySQL</a></li>
 </ol>
 
 <h3>
 <a id="running-the-project" class="anchor" href="#running-the-project" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running the project:</h3>
 
 <ol>
-  <li>Create a virtual environment: 'virtualenv env -ppython3.4'.</li>
-  <li>Activate the virtualenv: 'source env/bin/activate'.</li>
-  <li>run 'pip install -r path/to/requirements.txt'.</li>
+  <li>Create a virtual environment: <code>virtualenv env -ppython3.4</code>.</li>
+  <li>Activate the virtualenv: <code>source env/bin/activate</code>.</li>
+  <li>run <code>pip install -r path/to/requirements.txt</code>.</li>
   <li>Create a new database in MySQL called stockmemaybe.</li>
   <li>In stockmemaybe/settings.py, enter the username and password in the DATABASES section.</li>
   <li>If you haven't created an app for twitter access yet, create one.</li>
   <li>Enter consumer key, consumer secret, oauth token oauth token secret from your twitter app into the respective fields in ugc/views.py tweets_get() method.</li>
-  <li>Run the application on the local host using the command : “python manage.py runserver”</li>
-  <li>Open the web browser and enter the url “localhost:8000/main”.</li>
+  <li>Run the application on the local host using the command : <code>python manage.py runserver</code>.</li>
+  <li>Open the web browser and enter the url <code>localhost:8000/main</code>.</li>
   <li>Enter the company ticker in the textbox.</li>
-  <li>Press the “Analyse” button.</li>
+  <li>Press the <code>Analyse</code> button.</li>
   <li>The project computes and displays the predicted stock price for the entered company.</li>
 </ol>
 
