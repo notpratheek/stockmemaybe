@@ -16,7 +16,7 @@ MySQL is used for database management.
 <ol>
   <li>Create a virtual environment: 'virtualenv env -ppython3.4'.</li>
   <li>Activate the virtualenv: 'source env/bin/activate'.</li>
-  <li>run 'pip install -r path/to/requirements.txt'.</li>
+  <li>run 'pip install -r requirements.txt'.</li>
   <li>Create a new database in MySQL called stockmemaybe.</li>
   <li>In stockmemaybe/settings.py, enter the username and password in the DATABASES section.</li>
   <li>If you haven't created an app for twitter access yet, create one.</li>
