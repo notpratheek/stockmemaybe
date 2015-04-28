@@ -49,7 +49,15 @@ class UGCView(ListView):
 		#Wait till all the threads have completed execution
 		t_yfm.join()
 		t_yfn.join()
-		t_twtr.join()	
+		t_twtr.join()
+		#Get messages for page
+		msg = Messages.objects.filter(created_at__range = [timezone.now() - timedelta(days=1), timezone.now()], company_id = company.id)
+		m_yfm = msg.filter(source_id = 1).values('text').distinct()
+		m_yfn = msg.filter(source_id = 2).values('text').distinct()
+		m_twtr = msg.filter(source_id = 3).values('text').distinct()
+		yfm = [m['text'] for m in m_yfm]
+		yfn = [m['text'] for m in m_yfn]
+		twtr = [m['text'] for m in m_twtr]
 		#Get Predicted stock price
 		predicted_price = stock_price_prediction(price, company)
 		#Data for graph
@@ -58,7 +66,7 @@ class UGCView(ListView):
 		company_name = get_company_name(company)
 		#Render page, sending data to be used in template
 		#return render_to_response(self.template_name,{'ticker':tkr, 'price':price,'predicted_price':predicted_price, 'message_list':messages.filter(company_id = company.id), 'sources': Source.objects.all(), 's' : s })
-		return render_to_response(self.template_name,{'ticker':tkr, 'price':price, 'c_name':company_name, 'predicted_price':predicted_price, 'g_data':g_data})
+		return render_to_response(self.template_name,{'ticker':tkr, 'price':price, 'c_name':company_name, 'predicted_price':predicted_price, 'g_data':g_data, 'yfm':yfm, 'yfn':yfn, 'twtr':twtr})
 	#Nothing to pass, yet. Could be used for graphs.
 	def get_queryset(self):
 		return 
@@ -144,10 +152,10 @@ def calculate_effective_sentiment(messages, company):
 def tweets_get(company, source):
 	
 	#Define twitter OAuth keys
-	CONSUMER_KEY = 'CONSUMER_KEY'
-	CONSUMER_SECRET = 'CONSUMER_SECRET'
-	OAUTH_TOKEN = 'OAUTH_TOKEN'
-	OAUTH_TOKEN_SECRET = 'OAUTH_TOKEN_SECRET'
+	CONSUMER_KEY = 'aaB02KrHuxwwiH5ExuQDLacGf'
+	CONSUMER_SECRET = 'NidAuILrHwN3Q1YJTL8roweCY8N5PncBE9JR2sfFRDg4H8PMo0'
+	OAUTH_TOKEN = '1350299064-CfPCq0JAZg1nMfONjwTp0C4U2Y9ykhUFT1yVN3J'
+	OAUTH_TOKEN_SECRET = 'gx0UpsjDMIoCVGzWQNqkXO5L1qH9nWOZnKCSpQLZKnZVS'
 	
 	#Authenticate api access
 	auth=twitter.oauth.OAuth(OAUTH_TOKEN,OAUTH_TOKEN_SECRET,CONSUMER_KEY,CONSUMER_SECRET)

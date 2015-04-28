@@ -88,8 +88,38 @@ body{
 			<div class="f_right"><p>Current Price: {{price}}</p><p>Predicted Price: {{predicted_price}}</p></div>
 		</div>
 		<div class="jumbotron other-colour" style="margin-bottom: 100px; overflow: hidden;">
-			<div>
-				<canvas id="myChart"></canvas>
+			<div role="tabpanel">
+			  <!-- Nav tabs -->
+			  <ul class="nav nav-tabs" role="tablist">
+			    <li role="presentation" class="active"><a href="#graph" aria-controls="graph" role="tab" data-toggle="tab">Graph</a></li>
+			    <li role="presentation"><a href="#yfm" aria-controls="yfm" role="tab" data-toggle="tab">Yahoo Finance Messages</a></li>
+			    <li role="presentation"><a href="#yfn" aria-controls="yfn" role="tab" data-toggle="tab">Yahoo Finance News</a></li>
+			    <li role="presentation"><a href="#twtr" aria-controls="twtr" role="tab" data-toggle="tab">Twitter</a></li>
+			  </ul>
+			  <!-- Tab panes -->
+			  <div class="tab-content white-bg">
+			    <div role="tabpanel" class="tab-pane active" id="graph"><canvas id="myChart"></canvas></div>
+			    <div role="tabpanel" class="tab-pane" id="yfm">
+			    	<ul>
+			    	{% for m in yfm %}
+			    		<li>{{m|safe}}</li>
+			    	{% endfor %}
+			    	</ul>
+			    </div>
+			    <div role="tabpanel" class="tab-pane" id="yfn">
+			    	<ul>
+			    	{% for m in yfn %}
+			    		<li>{{m|safe}}</li>
+			    	{% endfor %}
+			    	</ul>
+			    </div>
+			    <div role="tabpanel" class="tab-pane" id="twtr">
+			    	<ul>
+			    	{% for m in twtr %}
+			    		<li>{{m|safe}}</li>
+			    	{% endfor %}
+			    	</ul>
+			    </div>
 			</div>
 		</div>
 	</div>
