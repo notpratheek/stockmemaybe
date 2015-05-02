@@ -96,23 +96,23 @@ body{
 			  <div class="tab-content white-bg">
 			    <div role="tabpanel" class="tab-pane active" id="graph"><canvas id="myChart"></canvas></div>
 			    <div role="tabpanel" class="tab-pane" id="yfm">
-			    	<ul>
+			    	<ul class="list-group">
 			    	{% for m in yfm %}
-			    		<li>{{m|safe}}</li>
+			    		<li class="list-group-item">{{m|safe}}</li>
 			    	{% endfor %}
 			    	</ul>
 			    </div>
 			    <div role="tabpanel" class="tab-pane" id="yfn">
-			    	<ul>
+			    	<ul class="list-group">
 			    	{% for m in yfn %}
-			    		<li>{{m|safe}}</li>
+			    		<li class="list-group-item">{{m|safe}}</li>
 			    	{% endfor %}
 			    	</ul>
 			    </div>
 			    <div role="tabpanel" class="tab-pane" id="twtr">
-			    	<ul>
+			    	<ul class="list-group">
 			    	{% for m in twtr %}
-			    		<li>{{m|safe}}</li>
+			    		<li class="list-group-item">{{m|safe}}</li>
 			    	{% endfor %}
 			    	</ul>
 			    </div>
